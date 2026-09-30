@@ -7,7 +7,7 @@ import re
 
 app = Flask(__name__, static_folder='.')
 
-DOWNLOAD_DIR = os.path.expanduser('~/Downloads/AnyDL')
+DOWNLOAD_DIR = os.path.join(os.getcwd(), 'downloads')
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 downloads = {}
@@ -26,7 +26,6 @@ def download_video(url, download_id):
                 speed = d.get('_speed_str', '0KiB/s').strip()
                 eta = d.get('_eta_str', '00:00').strip()
                 
-                # clean up ANSI escape codes
                 percent = ansi_escape.sub('', percent)
                 speed = ansi_escape.sub('', speed)
                 eta = ansi_escape.sub('', eta)
@@ -46,7 +45,8 @@ def download_video(url, download_id):
                 'percent': '100%',
                 'speed': '0',
                 'eta': '00:00',
-                'title': d.get('info_dict', {}).get('title', 'Video')
+                'title': d.get('info_dict', {}).get('title', 'Video'),
+                'filename': os.path.basename(d.get('info_dict', {}).get('_filename', ''))
             }
 
     ydl_opts = {
@@ -89,5 +89,9 @@ def get_progress(download_id):
     info = downloads.get(download_id, {'status': 'not_found'})
     return jsonify(info)
 
+@app.route('/download/<filename>')
+def serve_file(filename):
+    return send_from_directory(DOWNLOAD_DIR, filename, as_attachment=True)
+
 if __name__ == '__main__':
-    app.run(port=5000)
+    app.run(host='0.0.0.0', port=5000)

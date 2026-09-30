@@ -219,11 +219,11 @@
                         } else if (progData.status === 'finished') {
                             clearInterval(interval);
                             downloadBtn.innerText = 'Finished!';
-                            progressTitle.innerText = 'Download Complete!';
+                            progressTitle.innerText = 'File Ready!';
                             progressPercentText.innerText = '100%';
                             progressBar.style.width = '100%';
-                            progressDetails.innerText = 'Saved to Downloads/AnyDL';
-                            setTimeout(resetUI, 5000);
+                            progressDetails.innerHTML = `<a href="/download/${encodeURIComponent(progData.filename)}" download class="text-green-400 hover:text-green-300 font-bold underline">Click here to save to your device</a>`;
+                            setTimeout(resetUI, 10000);
                         } else if (progData.status === 'error') {
                             clearInterval(interval);
                             
