@@ -73,9 +73,9 @@ def index():
 
 @app.route('/api/download', methods=['POST'])
 def start_download():
-    data = request.json
+    data = request.get_json(silent=True) or {}
     url = data.get('url')
-    if not url:
+    if not isinstance(url, str) or not url.strip():
         return jsonify({'error': 'No URL provided'}), 400
     
     download_id = str(uuid.uuid4())
@@ -94,4 +94,4 @@ def serve_file(filename):
     return send_from_directory(DOWNLOAD_DIR, filename, as_attachment=True)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5001)
