@@ -105,7 +105,7 @@
                 </div>
                 <div class="p-8 pb-32">
                     <div class="w-full max-w-xl mx-auto flex items-center bg-black/50 border border-white/10 rounded-lg p-2">
-                        <input type="text" id="video-url" placeholder="Paste video URL here..." class="bg-transparent w-full px-4 py-2 outline-none text-white placeholder-gray-500">
+                        <input type="text" id="video-url" autofocus placeholder="Paste video URL here..." class="bg-transparent w-full px-4 py-2 outline-none text-white placeholder-gray-500">
                         <button id="download-btn" onclick="startDownload()" class="bg-purple-600 hover:bg-purple-500 transition text-white px-6 py-2 rounded-md font-semibold text-sm">Download</button>
                     </div>
                     
@@ -284,6 +284,23 @@
                 progressContainer.style.display = 'none';
             }
         }
+        document.addEventListener('paste', (e) => {
+            const pastedText = (e.clipboardData || window.clipboardData).getData('text').trim();
+            // Check if pasted text looks like a valid URL
+            if (pastedText && pastedText.match(/^https?:\/\//)) {
+                e.preventDefault();
+                
+                const urlInput = document.getElementById('video-url');
+                const downloadBtn = document.getElementById('download-btn');
+                
+                urlInput.value = pastedText;
+                
+                // If a download isn't already running, start it
+                if (!downloadBtn.disabled) {
+                    startDownload();
+                }
+            }
+        });
     </script>
 </body>
 </html>
