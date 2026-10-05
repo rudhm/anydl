@@ -20,5 +20,7 @@ services:
     environment:
       DOWNLOAD_DIR: /data/downloads
       DATABASE_PATH: /data/anydl.sqlite3
+      YTDLP_COOKIE_FILE: /cookies/instagram.txt
     volumes:
       - ${ANYDL_DATA_DIR:-/srv/anydl}:/data
+      - ${YTDLP_COOKIE_FILE:-/srv/anydl/instagram-cookies.txt}:/cookies/instagram.txt:ro

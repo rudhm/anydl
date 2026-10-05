@@ -11,6 +11,8 @@ Install Docker and Compose on the VM, then run:
 ```sh
 sudo mkdir -p /srv/anydl/downloads
 sudo chown -R "$USER":"$USER" /srv/anydl
+# Copy an authenticated Netscape-format cookies file to:
+# /srv/anydl/instagram-cookies.txt
 cp .env.example .env
 # Set PUBLIC_ORIGIN to the Vercel site's exact origin.
 docker compose up -d --build
@@ -28,3 +30,18 @@ script in `index.html` to that URL and redeploy the frontend:
 
 The worker polls SQLite for queued jobs, updates progress durably, and writes
 finished files to `/srv/anydl/downloads`.
+
+## Instagram authentication
+
+Instagram may require an authenticated session even for apparently public reels.
+Export cookies for an Instagram account you control in Netscape format and copy
+the file to `/srv/anydl/instagram-cookies.txt` on the VM. Do not commit the file
+or paste its contents into chat. The worker mounts it read-only and passes it to
+yt-dlp only for downloads running on the VM.
+
+Cookies expire or may be revoked. If Instagram starts returning login or
+rate-limit errors, export a fresh cookies file and restart the worker:
+
+```sh
+docker compose restart anydl-worker
+```

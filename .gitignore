@@ -1,1 +1,4 @@
 .vercel
+*.sqlite3
+downloads/
+*-cookies.txt

@@ -15,6 +15,7 @@ from app import (
 )
 
 POLL_INTERVAL = float(os.environ.get('WORKER_POLL_INTERVAL', '2'))
+COOKIE_FILE = os.environ.get('YTDLP_COOKIE_FILE', '').strip()
 ANSI_ESCAPE = __import__('re').compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 
 
@@ -69,6 +70,11 @@ def process_job(job):
         'progress_hooks': [progress_hook],
         'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
     }
+    if COOKIE_FILE:
+        if not os.path.isfile(COOKIE_FILE):
+            update_job(job_id, status='error', error='Configured yt-dlp cookie file does not exist.', percent='0%')
+            return
+        options['cookiefile'] = COOKIE_FILE
     if output_format == 'srt':
         options.update({
             'skip_download': True,
