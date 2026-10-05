@@ -1,0 +1,30 @@
+# AnyDL backend
+
+The Vercel site is only the frontend. The downloader runs as two persistent Docker
+services on the Oracle VM: an API and a worker. SQLite stores job state and the
+mounted data directory stores completed files.
+
+## Oracle VM deployment
+
+Install Docker and Compose on the VM, then run:
+
+```sh
+sudo mkdir -p /srv/anydl/downloads
+sudo chown -R "$USER":"$USER" /srv/anydl
+cp .env.example .env
+# Set PUBLIC_ORIGIN to the Vercel site's exact origin.
+docker compose up -d --build
+```
+
+Expose port `5001` through the VM firewall and reverse proxy it behind HTTPS,
+for example at `https://api.example.com`.
+
+After the API URL is available, set `window.ANYDL_API_BASE` before the application
+script in `index.html` to that URL and redeploy the frontend:
+
+```html
+<script>window.ANYDL_API_BASE = 'https://api.example.com';</script>
+```
+
+The worker polls SQLite for queued jobs, updates progress durably, and writes
+finished files to `/srv/anydl/downloads`.

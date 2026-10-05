@@ -104,8 +104,26 @@
                     <div class="mx-auto text-xs font-medium text-gray-400">AnyDL</div>
                 </div>
                 <div class="p-8 pb-32">
-                    <div class="w-full max-w-xl mx-auto flex items-center bg-black/50 border border-white/10 rounded-lg p-2">
+                    <div class="w-full max-w-xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center bg-black/50 border border-white/10 rounded-lg p-2 gap-2">
                         <input type="text" id="video-url" autofocus placeholder="Paste video URL here..." class="bg-transparent w-full px-4 py-2 outline-none text-white placeholder-gray-500">
+                        <select id="output-format" class="bg-gray-900 border border-white/10 rounded-md px-3 py-2 text-sm text-white outline-none">
+                            <optgroup label="Video">
+                                <option value="mp4">MP4</option>
+                                <option value="webm">WebM</option>
+                                <option value="mkv">MKV</option>
+                                <option value="mov">MOV</option>
+                                <option value="avi">AVI</option>
+                                <option value="gif">GIF</option>
+                            </optgroup>
+                            <optgroup label="Audio">
+                                <option value="mp3">MP3</option>
+                                <option value="m4a">M4A</option>
+                                <option value="wav">WAV</option>
+                                <option value="flac">FLAC</option>
+                                <option value="ogg">OGG</option>
+                            </optgroup>
+                            <option value="srt">SRT subtitles</option>
+                        </select>
                         <button id="download-btn" onclick="startDownload()" class="bg-purple-600 hover:bg-purple-500 transition text-white px-6 py-2 rounded-md font-semibold text-sm">Download</button>
                     </div>
                     
@@ -171,6 +189,8 @@
     </footer>
 
     <script>
+        const API_BASE = window.ANYDL_API_BASE || '';
+
         async function startDownload() {
             const urlInput = document.getElementById('video-url');
             const downloadBtn = document.getElementById('download-btn');
@@ -179,6 +199,7 @@
             const progressPercentText = document.getElementById('progress-percent-text');
             const progressBar = document.getElementById('progress-bar');
             const progressDetails = document.getElementById('progress-details');
+            const format = document.getElementById('output-format').value;
 
             const url = urlInput.value.trim();
             if(!url) return alert('Please enter a valid URL');
@@ -190,10 +211,10 @@
             progressContainer.style.display = 'flex';
             
             try {
-                const res = await fetch('/api/download', {
+                const res = await fetch(API_BASE + '/api/download', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({url: url})
+                    body: JSON.stringify({url: url, format: format})
                 });
                 const data = await res.json();
                 
@@ -207,22 +228,24 @@
                 
                 const interval = setInterval(async () => {
                     try {
-                        const progRes = await fetch('/api/progress/' + downloadId);
+                        const progRes = await fetch(API_BASE + '/api/progress/' + downloadId);
                         const progData = await progRes.json();
 
-                        if(progData.status === 'downloading' || progData.status === 'starting') {
+                        if(progData.status === 'downloading' || progData.status === 'starting' || progData.status === 'converting') {
                             downloadBtn.innerText = 'Downloading...';
                             progressTitle.innerText = progData.title || 'Downloading...';
                             progressPercentText.innerText = progData.percent || '0%';
                             progressBar.style.width = progData.percent || '0%';
-                            progressDetails.innerText = `Downloading at ${progData.speed} • ETA: ${progData.eta}`;
+                            progressDetails.innerText = progData.status === 'converting'
+                                ? 'Converting to ' + format.toUpperCase() + '...'
+                                : `Downloading at ${progData.speed} • ETA: ${progData.eta}`;
                         } else if (progData.status === 'finished') {
                             clearInterval(interval);
                             downloadBtn.innerText = 'Finished!';
                             progressTitle.innerText = 'File Ready!';
                             progressPercentText.innerText = '100%';
                             progressBar.style.width = '100%';
-                            progressDetails.innerHTML = `<a href="/download/${encodeURIComponent(progData.filename)}" download class="text-green-400 hover:text-green-300 font-bold underline">Click here to save to your device</a>`;
+                            progressDetails.innerHTML = `<a href="${API_BASE}/download/${encodeURIComponent(progData.filename)}" download class="text-green-400 hover:text-green-300 font-bold underline">Click here to save to your device</a>`;
                             setTimeout(resetUI, 10000);
                         } else if (progData.status === 'error') {
                             clearInterval(interval);

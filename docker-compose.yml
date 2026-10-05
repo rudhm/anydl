@@ -1,0 +1,24 @@
+services:
+  anydl-api:
+    build: .
+    restart: unless-stopped
+    environment:
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-*}
+      DOWNLOAD_DIR: /data/downloads
+      DATABASE_PATH: /data/anydl.sqlite3
+    volumes:
+      - ${ANYDL_DATA_DIR:-/srv/anydl}:/data
+    ports:
+      - "5001:5001"
+    depends_on:
+      - anydl-worker
+
+  anydl-worker:
+    build: .
+    restart: unless-stopped
+    command: ["python", "worker.py"]
+    environment:
+      DOWNLOAD_DIR: /data/downloads
+      DATABASE_PATH: /data/anydl.sqlite3
+    volumes:
+      - ${ANYDL_DATA_DIR:-/srv/anydl}:/data
